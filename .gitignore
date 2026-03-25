@@ -1,0 +1,39 @@
+# Environment files
+.env
+.env.dev
+.env.prod
+.env.local
+
+# Build outputs
+target/
+dist/
+build/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Dependencies
+node_modules/
+
+# Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Docker volumes
+*.vol
+
+# Misc
+scope.txt
