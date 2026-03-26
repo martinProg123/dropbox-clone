@@ -1,6 +1,5 @@
 package com.example.dropbox.service;
 
-import java.security.Key;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
@@ -41,15 +40,15 @@ public class JwtUtil {
     }
 
     public Claims validateToken(String token) {
-        Claims claims = Jwts.parser() // Use the builder for a fluent configuration
-                .verifyWith(SIGNING_KEY) // Provide the key used for signing
-                .build() // Build the immutable parser instance
-                .parseSignedClaims(token) // Parse the JWS (Signed JWT)
-                .getPayload(); // Extract the claims (payload)
-
-        // System.out.println("JWT is valid.");
-        // System.out.println("Subject: " + claims.getSubject());
-        // System.out.println("Issuer: " + claims.getIssuer());
-        return claims;
+        try {
+            Claims claims = Jwts.parser()
+                    .verifyWith(SIGNING_KEY)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+            return claims;
+        } catch (JwtException e) {
+            return null;
+        }
     }
 }

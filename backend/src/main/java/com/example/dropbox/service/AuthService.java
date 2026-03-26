@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.dropbox.dto.auth.LoginRequest;
 import com.example.dropbox.dto.auth.RegisterRequest;
 import com.example.dropbox.exception.AuthException;
-import com.example.dropbox.exception.ResourceNotFoundException;
 import com.example.dropbox.model.Users;
 import com.example.dropbox.repository.UsersRepository;
 

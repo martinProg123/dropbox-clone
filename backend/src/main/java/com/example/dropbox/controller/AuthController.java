@@ -31,10 +31,9 @@ public class AuthController {
         String jwtToken = authService.createUser(req);
         ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
                 .httpOnly(true) // Mitigates XSS
-                .secure(true) // Requires HTTPS
+                // .secure(true) // Requires HTTPS
                 .path("/")
                 .maxAge(3600) // 1 hour
-                .sameSite("Strict") // Mitigates CSRF
                 .build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
@@ -46,10 +45,9 @@ public class AuthController {
         String jwtToken = authService.login(req);
         ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
                 .httpOnly(true) // Mitigates XSS
-                .secure(true) // Requires HTTPS
+                // .secure(true) // Requires HTTPS
                 .path("/")
                 .maxAge(3600) // 1 hour
-                .sameSite("Strict") // Mitigates CSRF
                 .build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
