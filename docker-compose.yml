@@ -1,5 +1,5 @@
 services:
-  postgres:
+  postgres-prod:
     image: postgres:16
     environment:
       POSTGRES_USER: dropbox
@@ -28,7 +28,7 @@ services:
       - .env.prod
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dropbox
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-prod:5432/dropbox
       SPRING_DATASOURCE_USERNAME: dropbox
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       RABBITMQ_HOST: rabbitmq

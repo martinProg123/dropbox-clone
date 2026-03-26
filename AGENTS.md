@@ -30,6 +30,65 @@ This is a Dropbox clone built with Java Spring Boot + React for resume building.
 5. Implement frontend: components, pages, API calls
 6. Add integration tests
 
+## Docker Files
+- **backend/Dockerfile.dev** - Hot reload with Spring DevTools
+- **backend/Dockerfile** - Production multi-stage build
+- **frontend/Dockerfile.dev** - Vite dev server with hot reload
+- **frontend/Dockerfile** - Nginx for production (serves SPA + proxies /api)
+
+## Project Structure
+```
+backend/
+├── pom.xml
+├── Dockerfile, Dockerfile.dev
+├── src/main/java/com/example/dropbox/
+│   ├── DropboxApplication.java
+│   ├── config/
+│   │   ├── SecurityConfig.java
+│   │   ├── RabbitMQConfig.java
+│   │   └── MinioConfig.java
+│   ├── controller/
+│   │   ├── AuthController.java
+│   │   ├── UploadController.java
+│   │   ├── FileController.java
+│   │   └── ShareController.java
+│   ├── service/
+│   │   ├── AuthService.java
+│   │   ├── UploadService.java
+│   │   ├── FileService.java
+│   │   └── ShareService.java
+│   ├── repository/
+│   ├── model/
+│   │   ├── User.java
+│   │   ├── FileMetadata.java
+│   │   └── UploadStatus.java
+│   ├── dto/
+│   ├── worker/
+│   │   └── FileProcessingWorker.java
+│   └── exception/
+└── src/main/resources/
+    ├── application-dev.yml
+    └── application-prod.yml
+
+frontend/
+├── Dockerfile, Dockerfile.dev, nginx.conf
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── hooks/
+│   ├── services/
+│   └── lib/
+└── package.json
+```
+
+## Controllers & Services
+| Controller | Service | Purpose |
+|------------|---------|---------|
+| **AuthController** | AuthService | Login, Register, Logout |
+| **UploadController** | UploadService | Init, Complete |
+| **FileController** | FileService | List, Delete, Share, Download, Events, Search |
+| **ShareController** | ShareService | Public download via token |
+
 ## Docker Commands
 - Dev: `docker-compose -f docker-compose.dev.yml up --build`
 - Prod: `docker-compose up --build`

@@ -36,6 +36,14 @@ GET    /api/share/{token}        # Public download via share link
 GET    /api/search?q=...         # Full-text search (owner only)
 ```
 
+## Controllers & Services
+| Controller | Service | Purpose |
+|------------|---------|---------|
+| **AuthController** | AuthService | Login, Register, Logout |
+| **UploadController** | UploadService | Init, Complete |
+| **FileController** | FileService | List, Delete, Share, Download, Events, Search |
+| **ShareController** | ShareService | Public download via token |
+
 ## Database Schema
 ```sql
 CREATE TYPE upload_status AS ENUM ('UPLOADING', 'UPLOADED', 'PROCESSING', 'COMPLETED', 'FAILED');

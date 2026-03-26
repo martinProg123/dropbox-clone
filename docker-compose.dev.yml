@@ -1,5 +1,5 @@
 services:
-  postgres:
+  postgres-dev:
     image: postgres:16
     environment:
       POSTGRES_USER: dropbox
@@ -36,7 +36,7 @@ services:
       - .env.dev
     environment:
       SPRING_PROFILES_ACTIVE: dev
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dropbox
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-dev:5432/dropbox
       SPRING_DATASOURCE_USERNAME: dropbox
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       RABBITMQ_HOST: rabbitmq
@@ -47,7 +47,7 @@ services:
       - "8080:8080"
       - "5005:5005"
     depends_on:
-      - postgres
+      - postgres-dev
       - rabbitmq
       - minio
   frontend:
