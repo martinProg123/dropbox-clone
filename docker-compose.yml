@@ -7,11 +7,21 @@ services:
       POSTGRES_DB: dropbox
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dropbox"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   rabbitmq:
     image: rabbitmq:3-management
     environment:
       RABBITMQ_DEFAULT_USER: dropbox
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   minio:
     image: minio/minio
     command: server /data --console-address ":9001"
@@ -20,6 +30,11 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
     volumes:
       - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   backend:
     build:
       context: ./backend
@@ -35,6 +50,13 @@ services:
       MINIO_ENDPOINT: minio:9000
     ports:
       - "8080:8080"
+    depends_on:
+      postgres-prod:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
   frontend:
     build:
       context: ./frontend
@@ -45,6 +67,9 @@ services:
       VITE_API_URL: http://localhost:8080
     ports:
       - "80:80"
+    depends_on:
+      backend:
+        condition: service_started
 volumes:
   postgres_data:
   minio_data:

@@ -2,7 +2,6 @@ package com.example.dropbox.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -58,7 +57,7 @@ public class AuthController {
     public ResponseEntity<String> logout() {
         ResponseCookie cookie = ResponseCookie.from("jwt", "")
                 .httpOnly(true)
-                .secure(true)
+                // .secure(true)
                 .path("/")
                 .maxAge(0) // Set age to 0 to delete immediately
                 .build();

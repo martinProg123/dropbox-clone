@@ -24,3 +24,4 @@ jwt:
   expiration: 3600000
 app:
   cors-origins: http://localhost:5173
+  file-size-limit: 52428800

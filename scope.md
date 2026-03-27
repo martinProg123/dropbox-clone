@@ -5,6 +5,7 @@
 |---------|-------------|
 | JWT Auth | Register + Login with HttpOnly cookie |
 | File Upload | Pre-signed URL (text/pdf, < 50MB), drag & drop |
+| Object Storage | MinIO with object_key (not URL), format: users/{userId}/{uuid}_{filename} |
 | Tika Worker | Extract text + mimetype |
 | Checksum Worker | SHA-256 for deduplication |
 | Full-Text Search | PostgreSQL tsvector + GIN index |
@@ -61,7 +62,7 @@ CREATE TABLE file_metadata (
     filename TEXT NOT NULL,
     file_type TEXT,
     file_size BIGINT,
-    url TEXT,
+    object_key TEXT,
     extracted_text TEXT,
     checksum TEXT,
     status upload_status DEFAULT 'UPLOADING',
@@ -84,9 +85,28 @@ frontend    # React + Vite + Tailwind + shadcn/ui
 ```
 
 ## Docker Workflow
-- Dev: `docker-compose -f docker-compose.dev.yml up --build`
-- Prod: `docker-compose up --build`
+- Dev: `docker compose -f docker-compose.dev.yml --env-file .env.dev up -d`
+- Prod: `docker compose -f docker-compose.yml --env-file .env.prod up -d`
 - Use .env.dev for dev, .env.prod for prod
+
+## Upload Flow
+```
+1. Init: POST /api/upload/init
+   - Client sends: fileName, fileSize
+   - Backend validates size (≤50MB)
+   - Generate objectKey: users/{userId}/{uuid}_{filename}
+   - Create FileMetadata (status=UPLOADING)
+   - Generate presigned PUT URL from MinIO
+   - Return: { fileId, presignedUrl }
+
+2. Upload: Client → MinIO (direct via presigned URL)
+   - PUT request with file data
+
+3. Complete: POST /api/upload/complete
+   - Verify upload (optional: check actual size)
+   - Send message to RabbitMQ queue
+   - Update status: PROCESSING
+```
 
 ## Worker Flow
 ```

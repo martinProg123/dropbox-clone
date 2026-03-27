@@ -31,7 +31,8 @@ public class FileMetadata {
     @Column(name = "file_size")
     private Long fileSize;
 
-    private String url;
+    @Column(name = "object_key")
+    private String objectKey;
 
     @Column(name = "extracted_text", columnDefinition = "TEXT")
     private String extractedText;
@@ -40,7 +41,7 @@ public class FileMetadata {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private UploadStatus status = UploadStatus.UPLOADED;
+    private UploadStatus status = UploadStatus.UPLOADING;
 
     @Column(name = "is_shared")
     private Boolean isShared = false;

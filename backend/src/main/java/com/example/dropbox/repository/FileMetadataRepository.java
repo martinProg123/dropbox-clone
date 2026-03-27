@@ -18,13 +18,16 @@ public interface FileMetadataRepository extends JpaRepository<FileMetadata, Long
 
     List<FileMetadata> findByUserId(Users users);
 
-    FileMetadata findByUserIdAndFileId(Users user, Long id );
+    Optional<FileMetadata> findByUserIdAndFileId(Users user, Long id );
 
     @Query(value = """
             SELECT * FROM file_metadata
-            WHERE user_id = :userId
-            AND extracted_text @@ to_tsquery('english', :query)
-            ORDER BY ts_rank(extracted_text, plainto_tsquery('english', :query)) DESC
+        WHERE user_id = :userId
+        AND (
+            extracted_text @@ plainto_tsquery('english', :query) 
+            OR file_name ILIKE '%' || :query || '%'
+        )
+        ORDER BY ts_rank(extracted_text, plainto_tsquery('english', :query)) DESC
             """, nativeQuery = true)
     List<FileMetadata> searchByKeyword(@Param("userId") Long userId, @Param("query") String query);
 

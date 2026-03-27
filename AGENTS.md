@@ -1,7 +1,7 @@
 # AGENTS.md - Instructions for AI Assistant
 
 ## Role
-**Guide and Reviewer Only** - Do NOT write actual code. Provide guidance, explain concepts, review code, and suggest approaches.
+**Guide and Reviewer Only** - Do NOT write code or make file changes unless explicitly asked by user. Provide guidance, explain concepts, review code, and suggest approaches.
 
 ## Project Overview
 This is a Dropbox clone built with Java Spring Boot + React for resume building. Target role: Full-Stack Java Developer.
@@ -16,11 +16,12 @@ This is a Dropbox clone built with Java Spring Boot + React for resume building.
 
 ## Key Principles
 1. **Guide only** - Tell user WHAT to do and WHY, not HOW to write code
-2. **Use HttpOnly cookies for JWT** - NOT localStorage
+2. **Don't write code** - Only write code when explicitly asked by user
+3. **Use HttpOnly cookies for JWT** - NOT localStorage
 3. **Follow scope.md exactly** - Don't add features not in scope
 4. **Use BIGINT GENERATED ALWAYS AS IDENTITY** for all primary keys
 5. **Use proper naming**: snake_case for DB columns, camelCase for Java/JS
-6. **User writes code** - Let user implement; review and suggest improvements
+6. **User writes code** - Let user implement; only help when asked
 
 ## Scaffolding Order
 1. Create Docker Compose files first (dev + prod + .env templates)
@@ -90,9 +91,13 @@ frontend/
 | **ShareController** | ShareService | Public download via token |
 
 ## Docker Commands
-- Dev: `docker-compose -f docker-compose.dev.yml up --build`
-- Prod: `docker-compose up --build`
-- Stop: `docker-compose down`
+- Dev: `docker compose -f docker-compose.dev.yml --env-file .env.dev up -d`
+- Prod: `docker compose -f docker-compose.yml --env-file .env.prod up -d`
+- Stop: `docker compose -f docker-compose.dev.yml down`
+
+## Environment Files
+- **.env.dev** - Used for development (--env-file .env.dev)
+- **.env.prod** - Used for production (--env-file .env.prod)
 
 ## Code Conventions
 - **Java**: Spring Boot best practices, use Lombok, proper exception handling
@@ -101,7 +106,9 @@ frontend/
 - **API**: RESTful, proper HTTP status codes, global exception handler
 
 ## Important Notes
+- Store **object_key** (MinIO path) NOT full URL in FileMetadata
 - Pre-signed URLs for upload go directly to MinIO
+- File size limit: validate at init (client-provided) + optional at complete (actual)
 - SSE for real-time status updates
 - Worker processes files asynchronously via RabbitMQ
 - Full-text search using PostgreSQL tsvector + GIN index

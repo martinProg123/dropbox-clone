@@ -27,3 +27,4 @@ jwt:
 
 app:
   cors-origins: ${CORS_ORIGINS}
+  file-size-limit: 52428800

@@ -17,6 +17,12 @@ public class GlobalExceptionHandler {
             .body(e.getMessage());
     }
 
+    @ExceptionHandler(SizeLimtException.class)
+    public ResponseEntity<String> handleFileSizeLimit(SizeLimtException e) {
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
+            .body(e.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGeneral(Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
