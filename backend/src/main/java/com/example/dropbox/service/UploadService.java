@@ -33,10 +33,7 @@ import io.minio.errors.InvalidResponseException;
 import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
 import io.minio.http.Method;
-import lombok.RequiredArgsConstructor;
 
-
-@RequiredArgsConstructor
 @Service
 public class UploadService {
     private final FileMetadataRepository fmdRepo;
@@ -48,14 +45,13 @@ public class UploadService {
     @Value("${app.file-size-limit}")
     private Long SIZELIMIT;
 
-    // @Autowired
-    // public UploadService(FileMetadataRepository k, UsersRepository s,
-    //         MinioClient f, FileMsgProducerService a) {
-    //     fmdRepo = k;
-    //     usersRepository = s;
-    //     minioClient = f;
-    //     msgProducer = a;
-    // }
+    public UploadService(FileMetadataRepository fmdRepo, UsersRepository usersRepository, 
+            MinioClient minioClient, FileMsgProducerService msgProducer) {
+        this.fmdRepo = fmdRepo;
+        this.usersRepository = usersRepository;
+        this.minioClient = minioClient;
+        this.msgProducer = msgProducer;
+    }
 
     @Transactional
     public UploadInitResponse start(String email,
@@ -98,7 +94,7 @@ public class UploadService {
             if (user == null) {
                 throw new AuthException("User not found");
             }
-            FileMetadata file = fmdRepo.findByUserIdAndFileId(user, fileId).orElseThrow();
+            FileMetadata file = fmdRepo.findByUserAndId(user, fileId).orElseThrow();
             String objectKey = file.getObjectKey();
 
             long actualSize = checkFileSize(objectKey);

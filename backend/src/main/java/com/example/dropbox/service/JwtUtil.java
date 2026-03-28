@@ -33,7 +33,7 @@ public class JwtUtil {
                 .subject(email) // Set the subject claim
                 .issuedAt(new Date()) // Set the issued at time
                 .issuer("com.example.dropbox")
-                .expiration(new Date(expiration)) // Set expiration date
+                .expiration(new Date(System.currentTimeMillis() + expiration)) // Set expiration date
                 .signWith(SIGNING_KEY) // Sign the token with the key
                 .compact(); // Compact the token into its final string format
         return jwt;

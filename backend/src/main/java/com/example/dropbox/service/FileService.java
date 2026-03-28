@@ -3,7 +3,9 @@ package com.example.dropbox.service;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -31,9 +33,7 @@ import io.minio.errors.InvalidResponseException;
 import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
 import io.minio.http.Method;
-import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 @Service
 public class FileService {
     private final FileMetadataRepository fmdRepo;
@@ -42,16 +42,15 @@ public class FileService {
     @Value("${minio.bucket}")
     private String bucket;
 
-    // @Autowired
-    // public FileService(FileMetadataRepository f, UsersRepository u) {
-    // fmdRepo = f;
-    // usersRepository = u;
-
-    // }
+    public FileService(FileMetadataRepository fmdRepo, UsersRepository usersRepository, MinioClient minioClient) {
+        this.fmdRepo = fmdRepo;
+        this.usersRepository = usersRepository;
+        this.minioClient = minioClient;
+    }
 
     public List<FileDto> getUserFiles(String email) {
         Users user = usersRepository.findByEmail(email);
-        List<FileMetadata> fileList = fmdRepo.findByUserId(user);
+        List<FileMetadata> fileList = fmdRepo.findByUser(user);
         return fileList.stream()
                 .map(FileDto::fromEntity)
                 .collect(Collectors.toList());
@@ -65,18 +64,29 @@ public class FileService {
 
     public boolean isFileOwnedByUser(Long id, String email) {
         Users user = usersRepository.findByEmail(email);
-        Optional<FileMetadata> f = fmdRepo.findByUserIdAndFileId(user, id);
+        Optional<FileMetadata> f = fmdRepo.findByUserAndId(user, id);
         return f.isPresent();
+    }
+
+    public FileDto getFileById(String email, Long id) {
+        Users user = usersRepository.findByEmail(email);
+        FileMetadata file = fmdRepo.findByUserAndId(user, id)
+                .orElseThrow(() -> new ResourceNotFoundException("File not found"));
+        return FileDto.fromEntity(file);
     }
 
     public String getPresignedDownloadLink(FileMetadata f) throws InvalidKeyException, ErrorResponseException,
             InsufficientDataException, InternalException, InvalidResponseException, NoSuchAlgorithmException,
             XmlParserException, ServerException, IllegalArgumentException, IOException {
+        Map<String, String> queryParams = new HashMap<>();
+        queryParams.put("response-content-disposition", "attachment; filename=\"" + f.getFileName() + "\"");
+
         return minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                         .method(Method.GET)
                         .bucket(bucket)
                         .object(f.getObjectKey())
+                        .extraQueryParams(queryParams)
                         .expiry(15, TimeUnit.MINUTES)
                         .build());
     }
@@ -84,7 +94,7 @@ public class FileService {
     public String downloadByUser(
             String email, Long id) throws InvalidKeyException, ErrorResponseException, InsufficientDataException, InternalException, InvalidResponseException, NoSuchAlgorithmException, XmlParserException, ServerException, IllegalArgumentException, IOException {
         Users user = usersRepository.findByEmail(email);
-        Optional<FileMetadata> f = fmdRepo.findByUserIdAndFileId(user, id);
+        Optional<FileMetadata> f = fmdRepo.findByUserAndId(user, id);
         return getPresignedDownloadLink(f.get());
     }
 
@@ -96,7 +106,7 @@ public class FileService {
     @Transactional
     public String delFile(String email, Long id) {
         Users user = usersRepository.findByEmail(email);
-        fmdRepo.deleteByUserIdAndFileId(user, id);
+        fmdRepo.deleteByUserAndId(user, id);
         return "File: " + id + " Deleted success";
     }
 

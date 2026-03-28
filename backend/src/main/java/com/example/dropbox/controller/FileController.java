@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -18,24 +19,29 @@ import com.example.dropbox.exception.AuthException;
 import com.example.dropbox.service.FileService;
 import com.example.dropbox.service.SseService;
 
-import lombok.RequiredArgsConstructor;
-
 @RestController
 @RequestMapping("/api/files")
-@RequiredArgsConstructor
 public class FileController {
     private final FileService fileService;
     private final SseService sseService;
 
-    // @Autowired
-    // public FileController(FileService f) {
-    //     fileService = f;
-    // }
+    @Autowired
+    public FileController(FileService fileService, SseService sseService) {
+        this.fileService = fileService;
+        this.sseService = sseService;
+    }
 
     @GetMapping
     public ResponseEntity<List<FileDto>> getFiles(
             @AuthenticationPrincipal String email) {
         return ResponseEntity.ok().body(fileService.getUserFiles(email));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<FileDto> getFile(
+            @AuthenticationPrincipal String email,
+            @PathVariable Long id) {
+        return ResponseEntity.ok().body(fileService.getFileById(email, id));
     }
 
     @DeleteMapping("/{id}")
@@ -48,8 +54,8 @@ public class FileController {
     @GetMapping("/search")
     public ResponseEntity<List<FileDto>> getFilesByFTSearch(
             @AuthenticationPrincipal String email,
-            String keyword) {
-        return ResponseEntity.ok().body(fileService.getFileByKeyword(email, keyword));
+            @RequestParam String query) {
+        return ResponseEntity.ok().body(fileService.getFileByKeyword(email, query));
     }
 
     @PostMapping("/{id}/share")
@@ -70,6 +76,9 @@ public class FileController {
     public SseEmitter subscribe(
         @AuthenticationPrincipal String email,
         @PathVariable Long id) {
+            if (email == null) {
+                throw new AuthException("Authentication required");
+            }
             if(!fileService.isFileOwnedByUser(id, email))
                 throw new AuthException("Invalid access");
             return sseService.subscribe(id);

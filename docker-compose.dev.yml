@@ -55,7 +55,7 @@ services:
       SPRING_DATASOURCE_USERNAME: dropbox
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       RABBITMQ_HOST: rabbitmq
-      MINIO_ENDPOINT: minio:9000
+      MINIO_ENDPOINT: http://minio:9000
     volumes:
       - ./backend:/app
     ports:
@@ -75,7 +75,7 @@ services:
     env_file:
       - .env.dev
     environment:
-      VITE_API_URL: http://localhost:8080
+      VITE_API_URL: http://backend:8080
     volumes:
       - ./frontend:/app
       - /app/node_modules

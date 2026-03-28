@@ -5,35 +5,33 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.dropbox.dto.upload.UploadInitResponse;
+import com.example.dropbox.dto.upload.UploadRequest;
 import com.example.dropbox.exception.SizeLimtException;
 import com.example.dropbox.service.UploadService;
 
-import lombok.RequiredArgsConstructor;
-
 @RestController
 @RequestMapping("/api/upload")
-
-@RequiredArgsConstructor
 public class UploadController {
     private final UploadService uService;
     @Value("${app.file-size-limit}")
     private Long SIZELIMIT;
 
-    // @Autowired
-    // public UploadController(UploadService u) {
-    //     uService = u;
-    // }
+    public UploadController(UploadService uService) {
+        this.uService = uService;
+    }
 
     @PostMapping("/init")
     public ResponseEntity<UploadInitResponse> startUpload(
             @AuthenticationPrincipal String email,
-            @RequestParam String fileName,
-            @RequestParam Long fileSize) {
+            @RequestBody UploadRequest request) {
+        String fileName = request.fileName();
+        Long fileSize = request.fileSize();
+        
         if (fileSize > SIZELIMIT || fileSize <= 0)
             throw new SizeLimtException();
         if (fileName == null || fileName.isBlank())
@@ -49,7 +47,8 @@ public class UploadController {
     @PostMapping("/complete")
     public ResponseEntity<String> endUpload(
             @AuthenticationPrincipal String email,
-            @RequestParam Long fileId) {
+            @RequestBody UploadRequest request) {
+        Long fileId = request.fileId();
         if(fileId <= 0 || fileId == null)
             throw new IllegalArgumentException("Invalid File ID");
         return ResponseEntity.ok().body(uService.complete(email, fileId));

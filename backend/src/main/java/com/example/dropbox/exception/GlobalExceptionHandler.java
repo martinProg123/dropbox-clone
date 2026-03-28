@@ -16,19 +16,22 @@ import io.minio.errors.XmlParserException;
 public class GlobalExceptionHandler {
     @ExceptionHandler(AuthException.class)
     public ResponseEntity<String> handleAuthException(AuthException e) {
+        System.out.println(e.getMessage());
         return ResponseEntity.badRequest().body(e.getMessage());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<String> handleNotFound(ResourceNotFoundException e) {
+        System.out.println(e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(e.getMessage());
     }
 
     @ExceptionHandler(SizeLimtException.class)
     public ResponseEntity<String> handleFileSizeLimit(SizeLimtException e) {
+        System.out.println(e.getMessage());
         return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
-                .body(e.getMessage());
+                .body("Invalid File size");
     }
 
     @ExceptionHandler(Exception.class)
@@ -41,7 +44,8 @@ public class GlobalExceptionHandler {
             InternalException.class, InvalidResponseException.class,
             ServerException.class, XmlParserException.class })
     public ResponseEntity<String> handleMinioException(Exception e) {
+        System.out.println(e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-                .body("Storage service error: " + e.getMessage());
+                .body("Storage service error " );
     }
 }
