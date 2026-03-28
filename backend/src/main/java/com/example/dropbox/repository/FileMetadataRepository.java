@@ -24,10 +24,10 @@ public interface FileMetadataRepository extends JpaRepository<FileMetadata, Long
             SELECT * FROM file_metadata
         WHERE user_id = :userId
         AND (
-            extracted_text::tsvector @@ plainto_tsquery('english', :query) 
+            to_tsvector('english', extracted_text) @@ plainto_tsquery('english', :query) 
             OR file_name ILIKE '%' || :query || '%'
         )
-        ORDER BY ts_rank(extracted_text::tsvector, plainto_tsquery('english', :query)) DESC
+        ORDER BY ts_rank(to_tsvector('english', extracted_text), plainto_tsquery('english', :query)) DESC
             """, nativeQuery = true)
     List<FileMetadata> searchByKeyword(@Param("userId") Long userId, @Param("query") String query);
 

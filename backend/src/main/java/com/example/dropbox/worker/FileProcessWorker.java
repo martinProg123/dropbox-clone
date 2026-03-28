@@ -63,16 +63,16 @@ public class FileProcessWorker {
             String mimeType = tika.detect(mimeStream);
             System.out.println("FileProcessWorker: Detected MIME type: " + mimeType);
 
-            String text;
-            if (mimeType.startsWith("text/")) {
-                text = new String(data, StandardCharsets.UTF_8);
-            } else {
+            String text; 
+            // if (mimeType.startsWith("text/")) {
+                // text = new String(data, StandardCharsets.UTF_8);
+            // } else {
                 ByteArrayInputStream tikaStream = new ByteArrayInputStream(data);
                 Metadata metadata = new Metadata();
                 metadata.set("resourceName", objectKey);
                 metadata.set(Metadata.CONTENT_TYPE, mimeType);
                 text = tika.parseToString(tikaStream, metadata);
-            } 
+            // } 
             
             System.out.println("FileProcessWorker: Extracted text length: " + text.length() + " for fileId " + fileId);
             if (!text.isEmpty()) {
