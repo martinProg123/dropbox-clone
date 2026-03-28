@@ -36,11 +36,12 @@ function App() {
 
   return (
     <div className="">
-      <header className="">
+      <header className="flex justify-between p-5">
         <nav>
-          <NavLink to="/">Home</NavLink> | <NavLink to="/space">About</NavLink>
+          <NavLink to="/">Home</NavLink> | <NavLink to="/space">File</NavLink>
         </nav>
         <Button variant="outline"
+        className='cursor-pointer '
           onClick={handleAuthUI}
         >
           {isLogin ? "Logout" : "Login"}

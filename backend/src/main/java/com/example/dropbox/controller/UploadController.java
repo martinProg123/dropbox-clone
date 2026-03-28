@@ -13,17 +13,21 @@ import com.example.dropbox.dto.upload.UploadInitResponse;
 import com.example.dropbox.exception.SizeLimtException;
 import com.example.dropbox.service.UploadService;
 
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/upload")
+
+@RequiredArgsConstructor
 public class UploadController {
     private final UploadService uService;
     @Value("${app.file-size-limit}")
     private Long SIZELIMIT;
 
-    @Autowired
-    public UploadController(UploadService u) {
-        uService = u;
-    }
+    // @Autowired
+    // public UploadController(UploadService u) {
+    //     uService = u;
+    // }
 
     @PostMapping("/init")
     public ResponseEntity<UploadInitResponse> startUpload(

@@ -33,7 +33,10 @@ import io.minio.errors.InvalidResponseException;
 import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
 import io.minio.http.Method;
+import lombok.RequiredArgsConstructor;
 
+
+@RequiredArgsConstructor
 @Service
 public class UploadService {
     private final FileMetadataRepository fmdRepo;
@@ -45,14 +48,14 @@ public class UploadService {
     @Value("${app.file-size-limit}")
     private Long SIZELIMIT;
 
-    @Autowired
-    public UploadService(FileMetadataRepository k, UsersRepository s,
-            MinioClient f, FileMsgProducerService a) {
-        fmdRepo = k;
-        usersRepository = s;
-        minioClient = f;
-        msgProducer = a;
-    }
+    // @Autowired
+    // public UploadService(FileMetadataRepository k, UsersRepository s,
+    //         MinioClient f, FileMsgProducerService a) {
+    //     fmdRepo = k;
+    //     usersRepository = s;
+    //     minioClient = f;
+    //     msgProducer = a;
+    // }
 
     @Transactional
     public UploadInitResponse start(String email,

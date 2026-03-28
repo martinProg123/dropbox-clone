@@ -12,7 +12,7 @@ createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path="/" element={<App />}>
           <Route index element={<Home />} /> {/* Renders Home at exactly "/" */}
-          <Route path="space" element={<Space />} />
+          <Route path="space" element={<Home />} />
         </Route>
       </Routes>
     </BrowserRouter>

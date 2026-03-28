@@ -1,10 +1,16 @@
 package com.example.dropbox.service;
 
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,18 +22,32 @@ import com.example.dropbox.model.Users;
 import com.example.dropbox.repository.FileMetadataRepository;
 import com.example.dropbox.repository.UsersRepository;
 
+import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.MinioClient;
+import io.minio.errors.ErrorResponseException;
+import io.minio.errors.InsufficientDataException;
+import io.minio.errors.InternalException;
+import io.minio.errors.InvalidResponseException;
+import io.minio.errors.ServerException;
+import io.minio.errors.XmlParserException;
+import io.minio.http.Method;
+import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Service
 public class FileService {
     private final FileMetadataRepository fmdRepo;
     private final UsersRepository usersRepository;
+    private final MinioClient minioClient;
+    @Value("${minio.bucket}")
+    private String bucket;
 
-    @Autowired
-    public FileService(FileMetadataRepository f, UsersRepository u) {
-        fmdRepo = f;
-        usersRepository = u;
+    // @Autowired
+    // public FileService(FileMetadataRepository f, UsersRepository u) {
+    // fmdRepo = f;
+    // usersRepository = u;
 
-    }
+    // }
 
     public List<FileDto> getUserFiles(String email) {
         Users user = usersRepository.findByEmail(email);
@@ -37,10 +57,40 @@ public class FileService {
                 .collect(Collectors.toList());
     }
 
-    public FileDto getSharedFile(String token){
+    public FileDto getSharedFile(String token) {
         FileMetadata file = fmdRepo.findByShareToken(UUID.fromString(token))
-        .orElseThrow(()-> new ResourceNotFoundException("File not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("File not found"));
         return FileDto.fromEntity(file);
+    }
+
+    public boolean isFileOwnedByUser(Long id, String email) {
+        Users user = usersRepository.findByEmail(email);
+        Optional<FileMetadata> f = fmdRepo.findByUserIdAndFileId(user, id);
+        return f.isPresent();
+    }
+
+    public String getPresignedDownloadLink(FileMetadata f) throws InvalidKeyException, ErrorResponseException,
+            InsufficientDataException, InternalException, InvalidResponseException, NoSuchAlgorithmException,
+            XmlParserException, ServerException, IllegalArgumentException, IOException {
+        return minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                        .method(Method.GET)
+                        .bucket(bucket)
+                        .object(f.getObjectKey())
+                        .expiry(15, TimeUnit.MINUTES)
+                        .build());
+    }
+
+    public String downloadByUser(
+            String email, Long id) throws InvalidKeyException, ErrorResponseException, InsufficientDataException, InternalException, InvalidResponseException, NoSuchAlgorithmException, XmlParserException, ServerException, IllegalArgumentException, IOException {
+        Users user = usersRepository.findByEmail(email);
+        Optional<FileMetadata> f = fmdRepo.findByUserIdAndFileId(user, id);
+        return getPresignedDownloadLink(f.get());
+    }
+
+    public String downloadBySharedLink(String token) throws InvalidKeyException, ErrorResponseException, InsufficientDataException, InternalException, InvalidResponseException, NoSuchAlgorithmException, XmlParserException, ServerException, IllegalArgumentException, IOException {
+        Optional<FileMetadata> f = fmdRepo.findByShareToken(UUID.fromString(token));
+        return getPresignedDownloadLink(f.get());
     }
 
     @Transactional

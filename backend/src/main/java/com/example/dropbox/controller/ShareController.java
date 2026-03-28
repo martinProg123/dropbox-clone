@@ -3,6 +3,7 @@ package com.example.dropbox.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,12 +21,17 @@ public class ShareController {
     }
 
 
-    @GetMapping("/{token} ")
+    @GetMapping("/{token}")
     public ResponseEntity<FileDto> getFiles(
-        String token
+        @PathVariable String token
     ){
         return ResponseEntity.ok().body(fileService.getSharedFile(token));
     }
 
-    
+    @GetMapping("/{token}/download")
+    public ResponseEntity<String> downloadBySharedLink(
+        @PathVariable String token
+    )  throws Exception {
+        return ResponseEntity.ok().body(fileService.downloadBySharedLink(token));
+    }
 }

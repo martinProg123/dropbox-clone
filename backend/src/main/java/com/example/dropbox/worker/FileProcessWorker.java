@@ -19,25 +19,30 @@ import com.example.dropbox.exception.ResourceNotFoundException;
 import com.example.dropbox.model.FileMetadata;
 import com.example.dropbox.model.UploadStatus;
 import com.example.dropbox.repository.FileMetadataRepository;
+import com.example.dropbox.service.SseService;
 
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class FileProcessWorker {
 
     private final FileMetadataRepository fmdRepo;
     private final MinioClient minioClient;
     private final Tika tika;
+    private final SseService sseService;
+
     @Value("${minio.bucket}")
     private String bucket;
 
-    @Autowired
-    public FileProcessWorker(FileMetadataRepository f, MinioClient m, Tika t) {
-        fmdRepo = f;
-        minioClient = m;
-        tika = t;
-    }
+    // @Autowired
+    // public FileProcessWorker(FileMetadataRepository f, MinioClient m, Tika t) {
+    //     fmdRepo = f;
+    //     minioClient = m;
+    //     tika = t;
+    // }
 
     @Transactional
     @RabbitListener(queues = RabbitMQConfig.QUEUE)
@@ -68,11 +73,14 @@ public class FileProcessWorker {
             file.setFileType(mimeType);
             file.setFileSize((long) data.length);
             fmdRepo.save(file);
+            sseService.emit(fileId, "status", UploadStatus.COMPLETED);
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            if(file != null)
+            if(file != null){
                 file.setStatus(UploadStatus.FAILED);
-            fmdRepo.save(file);
+                fmdRepo.save(file);
+            }
+            sseService.emit(fileId, "status", UploadStatus.FAILED);
             throw e;
         }
     }
