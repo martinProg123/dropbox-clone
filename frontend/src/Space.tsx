@@ -35,13 +35,6 @@ interface FileItem {
   objectKey: string
 }
 
-// const mockFiles: FileItem[] = [
-//   { id: 1, fileName: "project-proposal.pdf", createdAt: "Mar 28, 2026", fileSize: "2.4 MB", status: "completed" },
-//   { id: 2, fileName: "meeting-notes.docx", createdAt: "Mar 27, 2026", size: "156 KB", status: "completed" },
-//   { id: 3, fileName: "budget-2026.xlsx", createdAt: "Mar 26, 2026", size: "890 KB", status: "processing" },
-//   { id: 4, fileName: "presentation.pptx", createdAt: "Mar 25, 2026", size: "5.2 MB", status: "completed" },
-// ]
-
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return "0 B"
   const k = 1024
@@ -191,8 +184,9 @@ function Space() {
       const res = await api.post(`/api/files/${fileId}/share`)
       const sharedLink = res.data
       console.log(sharedLink)
-      await navigator.clipboard.writeText(sharedLink)
-      toast.success(`Share link ${sharedLink} copied!`)
+      let fullLink = window.location.origin + sharedLink
+      await navigator.clipboard.writeText(fullLink)
+      toast.success(`Share link ${fullLink} copied!`)
     } catch (err) {
       toast.error("Generate share link failed")
     }

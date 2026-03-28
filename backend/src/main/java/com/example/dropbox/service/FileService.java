@@ -134,7 +134,7 @@ public class FileService {
             fmdRepo.save(file);
         }
 
-        return "/api/share/" + file.getShareToken();
+        return "/share/" + file.getShareToken();
     }
 
     @Transactional
