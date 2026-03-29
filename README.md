@@ -1,4 +1,11 @@
 # React + java spring boot + minio(object storage) + rabbitMQ + postgresql
+
+## Quick start
+```
+docker compose -f docker-compose.dev.yml --env-file .env.dev up -d postgres-dev rabbitmq minio
+cd frontend && npm run dev
+./run-backend.sh
+```
 ## Features:
 - Usual auth flow(login, logout) via jwt cookie
 - upload file
