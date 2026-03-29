@@ -56,6 +56,14 @@ const statusVariant = (status: FileItem["status"]) => {
   }
 }
 
+const calculateSHA256 = async (file: File): Promise<string> => {
+  const arrayBuffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+};
+
 function Space() {
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState("")
@@ -75,27 +83,27 @@ function Space() {
     }
   }, [debouncedText])
 
-  useEffect(() => {
-    if (!searchText) {
-      api.get("/api/files")
-        .then((res) => {
-          setUserFileList(res.data || [])
+    useEffect(() => {
+        if (!searchText) {
+            api.get("/api/files")
+                .then((res) => {
+                    setUserFileList(res.data || [])
+                })
+                .catch((error) => {
+                    console.error(error)
+                })
+            return
+        }
+        api.get("/api/files/search", { params: { query: searchText } })
+        .then((response) => {
+            if(response.data){
+                setUserFileList(response.data)
+            }
+        }).catch((error)=>{
+            console.error(error)
+            toast.error("Search failed")
         })
-        .catch((er) => {
-          console.error(er)
-        })
-      return
-    }
-    api.get("/api/files/search", { params: { query: searchText } })
-    .then((res)=>{
-      if(res.data){
-        setUserFileList(res.data)
-      }
-    }).catch((er)=>{
-      console.error(er)
-      toast.error("Search failed")
-    })
-  }, [searchText])
+    }, [searchText])
 
 
   useEffect(() => {
@@ -137,7 +145,7 @@ function Space() {
           .then((fileListRes) => {
             console.log(fileListRes)
             setUserFileList(fileListRes.data || [])
-          }).catch((err) => {
+          }).catch((_error) => {
             toast.error("Failed to fetch files")
           })
       })
@@ -153,19 +161,30 @@ function Space() {
     }
 
     const file = acceptedFiles[0]
-    toast.info("Uploading...")
+    toast.info("Calculating checksum...")
 
     try {
+      const checksum = await calculateSHA256(file);
+
+      toast.info("Checksum calculated. Initializing upload...")
+
       const initRes = await api.post('/api/upload/init', {
         fileName: file.name,
-        fileSize: file.size
+        fileSize: file.size,
+        checksum: checksum
       })
+
+      if (!initRes.data.uploadNeeded) {
+        const fileListRes = await api.get('/api/files')
+        setUserFileList(fileListRes.data || [])
+        return;
+      }
 
       const { presignedUrl, fileId } = initRes.data
 
       await axios.put(presignedUrl, file)
 
-      await api.post('/api/upload/complete', {
+      await api.post(`/api/upload/complete`, {
         fileId: fileId
       })
 
@@ -173,8 +192,8 @@ function Space() {
 
       const fileListRes = await api.get('/api/files')
       setUserFileList(fileListRes.data || [])
-    } catch (err) {
-      console.error(err)
+    } catch (error) {
+      console.error(error)
       toast.error("Upload failed")
     }
   }, [])
@@ -202,13 +221,13 @@ function Space() {
     }
   }
 
-  const deleteFile = async (fileId: number) => {
+    const deleteFile = async (fileId: number) => {
     try {
-      const res = await api.delete(`/api/files/${fileId}`)
+      await api.delete(`/api/files/${fileId}`)
       toast.success("File deleted")
       const fileListRes = await api.get('/api/files')
       setUserFileList(fileListRes.data || [])
-    } catch (err) {
+    } catch (_error) {
       toast.error("Delete file failed")
     }
   }

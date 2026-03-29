@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.dropbox.dto.upload.UploadCompleteRequest;
 import com.example.dropbox.dto.upload.UploadInitResponse;
 import com.example.dropbox.dto.upload.UploadRequest;
 import com.example.dropbox.exception.SizeLimtException;
@@ -30,8 +31,10 @@ public class UploadController {
             @AuthenticationPrincipal String email,
             @RequestBody UploadRequest request) {
         String fileName = request.fileName();
+        String fileType = request.fileType();
         Long fileSize = request.fileSize();
-        
+        String checksum = request.checksum();
+
         if (fileSize > SIZELIMIT || fileSize <= 0)
             throw new SizeLimtException();
         if (fileName == null || fileName.isBlank())
@@ -41,15 +44,15 @@ public class UploadController {
         if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\"))
             throw new IllegalArgumentException("Invalid filename");
 
-        return ResponseEntity.ok().body(uService.start(email, fileName, fileSize));
+        return ResponseEntity.ok().body(uService.start(email, fileName, fileType, fileSize, checksum));
     }
 
     @PostMapping("/complete")
-    public ResponseEntity<String> endUpload(
+    public ResponseEntity<String> endUpload( 
             @AuthenticationPrincipal String email,
-            @RequestBody UploadRequest request) {
+            @RequestBody UploadCompleteRequest request) {
         Long fileId = request.fileId();
-        if(fileId <= 0 || fileId == null)
+        if (fileId <= 0 || fileId == null)
             throw new IllegalArgumentException("Invalid File ID");
         return ResponseEntity.ok().body(uService.complete(email, fileId));
     }

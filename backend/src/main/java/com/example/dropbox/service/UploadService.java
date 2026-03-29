@@ -3,6 +3,7 @@ package com.example.dropbox.service;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +34,7 @@ import io.minio.errors.InvalidResponseException;
 import io.minio.errors.ServerException;
 import io.minio.errors.XmlParserException;
 import io.minio.http.Method;
+import java.security.NoSuchAlgorithmException;
 
 @Service
 public class UploadService {
@@ -56,18 +58,38 @@ public class UploadService {
     @Transactional
     public UploadInitResponse start(String email,
             String fileName,
-            Long fileSize) {
+            String fileType,
+            Long fileSize,
+            String checksum) {
         try {
             Users user = usersRepository.findByEmail(email);
             if (user == null) {
                 throw new AuthException("User not found");
             }
+            
+            Optional<FileMetadata> existingFile = fmdRepo.findFirstByChecksum(checksum);
+            if (existingFile.isPresent()) {
+                FileMetadata newFile = new FileMetadata();
+                newFile.setFileName(fileName);
+                newFile.setFileType(fileType);
+                newFile.setFileSize(fileSize);
+                newFile.setUser(user);
+                newFile.setChecksum(checksum); 
+                newFile.setObjectKey(existingFile.get().getObjectKey());
+                newFile.setStatus(UploadStatus.COMPLETED); 
+                newFile = fmdRepo.save(newFile);
+                return new UploadInitResponse(newFile.getId().toString(), null, false);
+            }
+            
             FileMetadata newFile = new FileMetadata();
             newFile.setFileName(fileName);
+            newFile.setFileType(fileType);
+            newFile.setFileSize(fileSize);
+            newFile.setChecksum(checksum); 
             newFile.setUser(user);
-            String objectKey = "users/" + user.getId() + "/" + UUID.randomUUID();
+            String objectKey = "obj/" + UUID.randomUUID();
             newFile.setObjectKey(objectKey);
-            // newFile.setStatus(UploadStatus.UPLOADING);
+            newFile.setStatus(UploadStatus.UPLOADING);
             newFile = fmdRepo.save(newFile);
             String preSignedUrl = minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
@@ -76,7 +98,7 @@ public class UploadService {
                             .object(objectKey)
                             .expiry(15, TimeUnit.MINUTES)
                             .build());
-            return new UploadInitResponse(newFile.getId().toString(), preSignedUrl);
+            return new UploadInitResponse(newFile.getId().toString(), preSignedUrl, true);
         } catch (Exception e) {
             throw new RuntimeException(
                     e.getMessage() != null
@@ -108,7 +130,7 @@ public class UploadService {
             file.setStatus(UploadStatus.PROCESSING);
             file.setFileSize(actualSize);
             fmdRepo.save(file);
-            return "Upload complete message received! Now processng";
+            return "Upload complete message received! Now processing";
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }

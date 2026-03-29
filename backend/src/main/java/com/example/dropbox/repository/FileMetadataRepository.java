@@ -20,6 +20,8 @@ public interface FileMetadataRepository extends JpaRepository<FileMetadata, Long
 
     Optional<FileMetadata> findByUserAndId(Users user, Long id);
 
+    Optional<FileMetadata> findFirstByChecksum(String checksum);
+
     @Query(value = """
             SELECT * FROM file_metadata
         WHERE user_id = :userId
@@ -34,5 +36,4 @@ public interface FileMetadataRepository extends JpaRepository<FileMetadata, Long
     @Modifying
     @Transactional
     void deleteByUserAndId(Users user, Long id);
-
 }

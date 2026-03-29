@@ -62,12 +62,12 @@ function App() {
   const logOut = async () => {
     try {
       const response = await api.post("/api/auth/logout");
-      console.log(response.data); // The response data from the server
+      console.log(response.data); 
       toast.success("Logout success")
       setIsLogin(false)
       navigate("/")
     } catch (error) {
-      console.error(error); // Handles any errors during the request
+      console.error(error); 
       toast.error("Something wrong. Try again later")
     }
   }
@@ -110,11 +110,11 @@ function App() {
 
     try {
       const response = await api.post(url, data);
-      console.log(response.data); // The response data from the server
+      console.log(response.data); 
       toast.success(formType === FORM_STATUS.LOGIN ? "Login successful!" : "Sign up successful!")
       navigate("/space")
     } catch (error) {
-      console.error(error); // Handles any errors during the request
+      console.error(error);
       if (axios.isAxiosError(error)) {
         const msg = error.response?.data || "Something wrong. Try again later"
         toast.error(msg)

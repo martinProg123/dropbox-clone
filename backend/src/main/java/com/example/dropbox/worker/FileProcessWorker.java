@@ -3,9 +3,9 @@ package com.example.dropbox.worker;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.HexFormat;
+import java.util.Optional;
 
 import org.apache.tika.Tika;
 import org.apache.tika.metadata.Metadata;
@@ -59,35 +59,58 @@ public class FileProcessWorker {
             byte[] data = stream.readAllBytes();
             System.out.println("FileProcessWorker: Read " + data.length + " bytes for fileId " + fileId);
 
-            ByteArrayInputStream mimeStream = new ByteArrayInputStream(data);
-            String mimeType = tika.detect(mimeStream);
-            System.out.println("FileProcessWorker: Detected MIME type: " + mimeType);
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(data);
+            byte[] hash = md.digest();
+            String actualChecksum = HexFormat.of().formatHex(hash);
+            
+            System.out.println("FileProcessWorker: Actual checksum: " + actualChecksum);
+            System.out.println("FileProcessWorker: Stored checksum: " + file.getChecksum());
 
-            String text; 
-            // if (mimeType.startsWith("text/")) {
-                // text = new String(data, StandardCharsets.UTF_8);
-            // } else {
+            if (file.getChecksum() != null && !file.getChecksum().equals(actualChecksum)) {
+                System.out.println("FileProcessWorker: Checksum mismatch! Attempting deduplication with actual checksum.");
+                
+                Optional<FileMetadata> existingFile = fmdRepo.findFirstByChecksum(actualChecksum);
+                if (existingFile.isPresent()) {
+                    System.out.println("FileProcessWorker: Found existing file with same checksum. Sharing object key.");
+                    file.setObjectKey(existingFile.get().getObjectKey());
+                    file.setChecksum(actualChecksum);
+                    file.setExtractedText(existingFile.get().getExtractedText());
+                    file.setFileType(existingFile.get().getFileType());
+                    file.setFileSize(existingFile.get().getFileSize());
+                } else {
+                    System.out.println("FileProcessWorker: No existing file found with this checksum. Using actual checksum.");
+                    file.setChecksum(actualChecksum);
+                }
+            } else if (file.getChecksum() == null) {
+                System.out.println("FileProcessWorker: No stored checksum. Using actual checksum.");
+                file.setChecksum(actualChecksum);
+            }
+
+            if (file.getExtractedText() == null || file.getExtractedText().isEmpty()) {
+                System.out.println("FileProcessWorker: Processing file for text extraction.");
+                ByteArrayInputStream mimeStream = new ByteArrayInputStream(data);
+                String mimeType = tika.detect(mimeStream);
+                System.out.println("FileProcessWorker: Detected MIME type: " + mimeType);
+
+                String text; 
                 ByteArrayInputStream tikaStream = new ByteArrayInputStream(data);
                 Metadata metadata = new Metadata();
                 metadata.set("resourceName", objectKey);
                 metadata.set(Metadata.CONTENT_TYPE, mimeType);
                 text = tika.parseToString(tikaStream, metadata);
-            // } 
-            
-            System.out.println("FileProcessWorker: Extracted text length: " + text.length() + " for fileId " + fileId);
-            if (!text.isEmpty()) {
-                System.out.println("FileProcessWorker: First 100 chars: " + text.substring(0, Math.min(100, text.length())));
+                
+                System.out.println("FileProcessWorker: Extracted text length: " + text.length() + " for fileId " + fileId);
+                if (!text.isEmpty()) {
+                    System.out.println("FileProcessWorker: First 100 chars: " + text.substring(0, Math.min(100, text.length())));
+                }
+
+                file.setExtractedText(text);
+                file.setFileType(mimeType);
             }
 
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            md.update(data);
-            byte[] hash = md.digest();
-
-            file.setChecksum(HexFormat.of().formatHex(hash));
-            file.setExtractedText(text);
-            file.setStatus(UploadStatus.COMPLETED);
-            file.setFileType(mimeType);
             file.setFileSize((long) data.length);
+            file.setStatus(UploadStatus.COMPLETED);
             fmdRepo.save(file);
             sseService.emit(fileId, "status", "COMPLETED");
         } catch (Exception e) {
