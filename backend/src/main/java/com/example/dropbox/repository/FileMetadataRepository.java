@@ -1,5 +1,6 @@
 package com.example.dropbox.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,6 +18,9 @@ public interface FileMetadataRepository extends JpaRepository<FileMetadata, Long
     Optional<FileMetadata> findByShareToken(UUID shareToken);
 
     List<FileMetadata> findByUser(Users user);
+
+    @Query("SELECT DISTINCT f.objectKey FROM FileMetadata f WHERE f.objectKey IS NOT NULL")
+    List<String> findDistinctObjectKey();
 
     Optional<FileMetadata> findByUserAndId(Users user, Long id);
 
@@ -36,4 +40,13 @@ public interface FileMetadataRepository extends JpaRepository<FileMetadata, Long
     @Modifying
     @Transactional
     void deleteByUserAndId(Users user, Long id);
+
+    @Modifying
+    @Transactional
+    @Query(value = """
+        DELETE FROM file_metadata
+        WHERE (status = 'FAILED' OR status = 'UPLOADING' OR status = 'PROCESSING') 
+        AND created_at < :staleRecordsDaysLimit 
+            """, nativeQuery = true)
+    int deleteStaleRecords(LocalDateTime staleRecordsDaysLimit);
 }

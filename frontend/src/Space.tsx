@@ -171,6 +171,7 @@ function Space() {
       const initRes = await api.post('/api/upload/init', {
         fileName: file.name,
         fileSize: file.size,
+        fileType: file.type || "text/plain",
         checksum: checksum
       })
 

@@ -1,7 +1,7 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/dropbox
-    username: dropbox
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   jpa:
     hibernate:
@@ -10,15 +10,16 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   rabbitmq:
-    host: localhost
+    host: ${RABBITMQ_HOST:rabbitmq}
     port: 5672
-    username: dropbox
+    username: ${RABBITMQ_USERNAME}
     password: ${RABBITMQ_PASSWORD}
 minio:
-  endpoint: http://localhost:9000
+  endpoint: ${MINIO_ENDPOINT}
   access-key: ${MINIO_USER}
   secret-key: ${MINIO_PASSWORD}
   bucket: dropbox-files
+  public-url: ${MINIO_PUBLIC_URL:http://localhost:9000}
 jwt:
   secret: ${JWT_SECRET}
   expiration: 3600000
@@ -28,3 +29,6 @@ app:
 logging:
   level:
     com.example.dropbox: DEBUG
+cleanup:
+  stale-days: 2
+  stale-cron: "0 0 1 * * ?"

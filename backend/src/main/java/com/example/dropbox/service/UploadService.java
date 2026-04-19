@@ -46,6 +46,10 @@ public class UploadService {
     private String bucket;
     @Value("${app.file-size-limit}")
     private Long SIZELIMIT;
+    @Value("${minio.endpoint}")
+    private String minioInternalEndpoint;
+    @Value("${minio.public-url}")
+    private String minioPublicUrl;
 
     public UploadService(FileMetadataRepository fmdRepo, UsersRepository usersRepository, 
             MinioClient minioClient, FileMsgProducerService msgProducer) {
@@ -67,6 +71,7 @@ public class UploadService {
                 throw new AuthException("User not found");
             }
             
+                System.out.println("Enter     public UploadInitResponse start(String email,");
             Optional<FileMetadata> existingFile = fmdRepo.findFirstByChecksum(checksum);
             if (existingFile.isPresent()) {
                 FileMetadata newFile = new FileMetadata();
@@ -97,7 +102,8 @@ public class UploadService {
                             .bucket(bucket)
                             .object(objectKey)
                             .expiry(15, TimeUnit.MINUTES)
-                            .build());
+                            .build())
+                            .replace(minioInternalEndpoint, minioPublicUrl);
             return new UploadInitResponse(newFile.getId().toString(), preSignedUrl, true);
         } catch (Exception e) {
             throw new RuntimeException(

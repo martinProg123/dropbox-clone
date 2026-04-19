@@ -2,7 +2,7 @@ services:
   postgres-dev:
     image: postgres:16
     environment:
-      POSTGRES_USER: dropbox
+      POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: dropbox
     volumes:
@@ -17,7 +17,7 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     environment:
-      RABBITMQ_DEFAULT_USER: dropbox
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     ports:
       - "5672:5672"
@@ -47,17 +47,18 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
-    env_file:
-      - .env.dev
+    # env_file:
+    #   - .env.dev
     environment:
       SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-dev:5432/dropbox
-      SPRING_DATASOURCE_USERNAME: dropbox
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_HOST: rabbitmq
       MINIO_ENDPOINT: http://minio:9000
-    volumes:
-      - ./backend:/app
+      JWT_SECRET: ${JWT_SECRET}
+    # volumes:
+    #   - ./backend:/app
     ports:
       - "8080:8080"
       - "5005:5005"
@@ -68,22 +69,29 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    env_file:
-      - .env.dev
-    environment:
-      VITE_API_URL: http://backend:8080
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    ports:
-      - "5173:5173"
-    depends_on:
-      backend:
-        condition: service_started
+    develop:
+      watch:
+        - path: ./backend/pom.xml
+          action: rebuild
+        - path: ./backend/src
+          target: /app/src
+          action: sync
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile.dev
+  #   env_file:
+  #     - .env.dev
+  #   environment:
+  #     VITE_API_URL: http://localhost:8080
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   ports:
+  #     - "5173:5173"
+  #   depends_on:
+  #     backend:
+  #       condition: service_started
 volumes:
   postgres_data:
   minio_data:

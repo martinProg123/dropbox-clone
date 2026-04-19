@@ -41,6 +41,11 @@ public class FileService {
     private final MinioClient minioClient;
     @Value("${minio.bucket}")
     private String bucket;
+    @Value("${minio.endpoint}")
+    private String minioInternalEndpoint;
+    @Value("${minio.public-url}")
+    private String minioPublicUrl;
+
 
     public FileService(FileMetadataRepository fmdRepo, UsersRepository usersRepository, MinioClient minioClient) {
         this.fmdRepo = fmdRepo;
@@ -88,7 +93,8 @@ public class FileService {
                         .object(f.getObjectKey())
                         .extraQueryParams(queryParams)
                         .expiry(15, TimeUnit.MINUTES)
-                        .build());
+                        .build())
+                        .replace(minioInternalEndpoint, minioPublicUrl);
     }
 
     public String downloadByUser(
