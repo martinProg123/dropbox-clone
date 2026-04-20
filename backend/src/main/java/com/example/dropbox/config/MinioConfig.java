@@ -3,9 +3,8 @@ package com.example.dropbox.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
-import io.minio.BucketExistsArgs;
-import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 
 @Configuration
@@ -18,11 +17,22 @@ public class MinioConfig {
 
     @Value("${minio.secret-key}")
     private String secretKey;
+    @Value("${minio.public-url}")
+    private String publicUrl;
 
     @Bean
+    @Primary
     public MinioClient minioClient() {
         return MinioClient.builder()
                 .endpoint(endpoint)
+                .credentials(accessKey, secretKey)
+                .build();
+    }
+
+    @Bean("minioClientPublic")
+    public MinioClient minioClientPublic() {
+        return MinioClient.builder()
+                .endpoint(publicUrl)
                 .credentials(accessKey, secretKey)
                 .build();
     }

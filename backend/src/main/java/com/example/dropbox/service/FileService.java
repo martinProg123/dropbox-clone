@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,19 +39,15 @@ import io.minio.http.Method;
 public class FileService {
     private final FileMetadataRepository fmdRepo;
     private final UsersRepository usersRepository;
-    private final MinioClient minioClient;
+    private final MinioClient minioClientPublic;
     @Value("${minio.bucket}")
     private String bucket;
-    @Value("${minio.endpoint}")
-    private String minioInternalEndpoint;
-    @Value("${minio.public-url}")
-    private String minioPublicUrl;
 
-
-    public FileService(FileMetadataRepository fmdRepo, UsersRepository usersRepository, MinioClient minioClient) {
+    public FileService(FileMetadataRepository fmdRepo, UsersRepository usersRepository, 
+         @Qualifier("minioClientPublic") MinioClient minioClient) {
         this.fmdRepo = fmdRepo;
         this.usersRepository = usersRepository;
-        this.minioClient = minioClient;
+        this.minioClientPublic = minioClient;
     }
 
     public List<FileDto> getUserFiles(String email) {
@@ -86,15 +83,14 @@ public class FileService {
         Map<String, String> queryParams = new HashMap<>();
         queryParams.put("response-content-disposition", "attachment; filename=\"" + f.getFileName() + "\"");
 
-        return minioClient.getPresignedObjectUrl(
+        return minioClientPublic.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                         .method(Method.GET)
                         .bucket(bucket)
                         .object(f.getObjectKey())
                         .extraQueryParams(queryParams)
                         .expiry(15, TimeUnit.MINUTES)
-                        .build())
-                        .replace(minioInternalEndpoint, minioPublicUrl);
+                        .build());
     }
 
     public String downloadByUser(

@@ -42,6 +42,7 @@ public class CleanupService {
         try {
             List<String> objectKeys = fmdRepo.findDistinctObjectKey();
             Set<String> dbObjectKeys = new HashSet<>(objectKeys);
+            log.info("size of dbObjectKeys {}", dbObjectKeys.size());
             List<DeleteObject> delObjList = new ArrayList<>();
             Iterable<Result<Item>> results = minioClient.listObjects(
                     ListObjectsArgs.builder()
@@ -52,6 +53,7 @@ public class CleanupService {
 
             for (Result<Item> result : results) {
                 Item item = result.get();
+                log.info("object name: {}", item.objectName());
                 if (!dbObjectKeys.contains(item.objectName()))
                     delObjList.add(new DeleteObject(item.objectName()));
             }
@@ -64,8 +66,8 @@ public class CleanupService {
                 for (Result<DeleteError> errorResult : delResults) {
                     DeleteError error = errorResult.get();
                     errDelCnt++;
-                    System.out.println(
-                            "Error in deleting object " + error.objectName() + "; " + error.message());
+                    log.error(
+                            "Error in deleting object {}; {}", error.objectName() , error.message());
                 }
                 log.info("Deleted {} orphan objects", delObjList.size() - errDelCnt);
             }

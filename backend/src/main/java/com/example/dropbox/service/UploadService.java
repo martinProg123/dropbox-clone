@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +42,7 @@ public class UploadService {
     private final FileMetadataRepository fmdRepo;
     private final UsersRepository usersRepository;
     private final MinioClient minioClient;
+    private final MinioClient minioClientPublic;
     private final FileMsgProducerService msgProducer;
     @Value("${minio.bucket}")
     private String bucket;
@@ -52,10 +54,13 @@ public class UploadService {
     private String minioPublicUrl;
 
     public UploadService(FileMetadataRepository fmdRepo, UsersRepository usersRepository, 
-            MinioClient minioClient, FileMsgProducerService msgProducer) {
+            MinioClient minioClient,
+             @Qualifier("minioClientPublic") MinioClient minioClientPublic,
+             FileMsgProducerService msgProducer) {
         this.fmdRepo = fmdRepo;
         this.usersRepository = usersRepository;
         this.minioClient = minioClient;
+        this.minioClientPublic = minioClientPublic;
         this.msgProducer = msgProducer;
     }
 
@@ -96,14 +101,13 @@ public class UploadService {
             newFile.setObjectKey(objectKey);
             newFile.setStatus(UploadStatus.UPLOADING);
             newFile = fmdRepo.save(newFile);
-            String preSignedUrl = minioClient.getPresignedObjectUrl(
+            String preSignedUrl = minioClientPublic.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
                             .method(Method.PUT)
                             .bucket(bucket)
                             .object(objectKey)
                             .expiry(15, TimeUnit.MINUTES)
-                            .build())
-                            .replace(minioInternalEndpoint, minioPublicUrl);
+                            .build());
             return new UploadInitResponse(newFile.getId().toString(), preSignedUrl, true);
         } catch (Exception e) {
             throw new RuntimeException(

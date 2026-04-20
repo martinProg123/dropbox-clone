@@ -47,8 +47,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
-    # env_file:
-    #   - .env.dev
+    env_file:
+      - .env.dev
     environment:
       SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-dev:5432/dropbox

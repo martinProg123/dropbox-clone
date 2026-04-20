@@ -5,6 +5,10 @@
 docker compose -f docker-compose.dev.yml --env-file .env.dev up -d postgres-dev rabbitmq minio
 cd frontend && npm run dev
 ./run-backend.sh
+or
+docker compose -f docker-compose.dev.yml --env-file .env.dev up -d
+cd frontend && npm run dev
+
 ```
 ## Features:
 - Usual auth flow(login, logout) via jwt cookie
@@ -33,6 +37,7 @@ cd frontend && npm run dev
 
 ## Api endpoint
 see [controller](/backend/src/main/java/com/example/dropbox/controller/)
+On demand clean up curl: curl -X POST http://localhost:8080/api/admin/cleanup
 
 ## DB schema:
 ```
