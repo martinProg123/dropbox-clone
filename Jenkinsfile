@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         APP_NAME = 'dropbox-clone'
-        DATETIME = "${JENKINS_TIMESTAMP,format="yyyyMMdd-HHmmss"}"
+        // DATETIME = "${JENKINS_TIMESTAMP,format="yyyyMMdd-HHmmss"}"
         DOCKER_HUB_CREDS = credentials('docker-hub-creds')
     }
 
@@ -92,14 +92,10 @@ pipeline {
                 echo 'Pushing Docker images...'
                 sh '''
                     docker tag dropbox-backend:latest $DOCKER_HUB_CREDS_USR/dropbox-backend:latest
-                    docker tag dropbox-backend:latest $DOCKER_HUB_CREDS_USR/dropbox-backend:$DATETIME
                     docker tag dropbox-frontend:latest $DOCKER_HUB_CREDS_USR/dropbox-frontend:latest
-                    docker tag dropbox-frontend:latest $DOCKER_HUB_CREDS_USR/dropbox-frontend:$DATETIME
                     echo $DOCKER_HUB_CREDS_PSW | docker login -u $DOCKER_HUB_CREDS_USR --password-stdin
                     docker push $DOCKER_HUB_CREDS_USR/dropbox-backend:latest
-                    docker push $DOCKER_HUB_CREDS_USR/dropbox-backend:$DATETIME
                     docker push $DOCKER_HUB_CREDS_USR/dropbox-frontend:latest
-                    docker push $DOCKER_HUB_CREDS_USR/dropbox-frontend:$DATETIME
                     docker logout
                 '''
             }
