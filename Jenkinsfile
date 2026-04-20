@@ -87,28 +87,20 @@ pipeline {
             }
         }
 
-        stage('Docker - Push Backend Image') {
+        stage('Docker - Push Images') {
             steps {
-                echo 'Pushing backend Docker image...'
+                echo 'Pushing Docker images...'
                 sh '''
-                    docker tag dropbox-backend:latest \$DOCKER_HUB_CREDS_USR/dropbox-backend:latest
-                    docker tag dropbox-backend:latest \$DOCKER_HUB_CREDS_USR/dropbox-backend:$DATETIME
-                    echo \$DOCKER_HUB_CREDS_PSW | docker login -u \$DOCKER_HUB_CREDS_USR --password-stdin
-                    docker push \$DOCKER_HUB_CREDS_USR/dropbox-backend:latest
-                    docker push \$DOCKER_HUB_CREDS_USR/dropbox-backend:$DATETIME
+                    docker tag dropbox-backend:latest $DOCKER_HUB_CREDS_USR/dropbox-backend:latest
+                    docker tag dropbox-backend:latest $DOCKER_HUB_CREDS_USR/dropbox-backend:$DATETIME
+                    docker tag dropbox-frontend:latest $DOCKER_HUB_CREDS_USR/dropbox-frontend:latest
+                    docker tag dropbox-frontend:latest $DOCKER_HUB_CREDS_USR/dropbox-frontend:$DATETIME
+                    echo $DOCKER_HUB_CREDS_PSW | docker login -u $DOCKER_HUB_CREDS_USR --password-stdin
+                    docker push $DOCKER_HUB_CREDS_USR/dropbox-backend:latest
+                    docker push $DOCKER_HUB_CREDS_USR/dropbox-backend:$DATETIME
+                    docker push $DOCKER_HUB_CREDS_USR/dropbox-frontend:latest
+                    docker push $DOCKER_HUB_CREDS_USR/dropbox-frontend:$DATETIME
                     docker logout
-                '''
-            }
-        }
-
-        stage('Docker - Push Frontend Image') {
-            steps {
-                echo 'Pushing frontend Docker image...'
-                sh '''
-                    docker tag dropbox-frontend:latest \$DOCKER_HUB_CREDS_USR/dropbox-frontend:latest
-                    docker tag dropbox-frontend:latest \$DOCKER_HUB_CREDS_USR/dropbox-frontend:$DATETIME
-                    docker push \$DOCKER_HUB_CREDS_USR/dropbox-frontend:latest
-                    docker push \$DOCKER_HUB_CREDS_USR/dropbox-frontend:$DATETIME
                 '''
             }
         }
@@ -116,8 +108,11 @@ pipeline {
         stage('Deploy to Local') {
             steps {
                 echo 'Deploying to local environment...'
-                sh 'docker-compose -f docker-compose.yml pull'
-                sh 'docker-compose -f docker-compose.yml up -d'
+                withCredentials([file(credentialsId: 'env-prod-file', variable: 'PROD_ENV_FILE')]) {
+                    sh 'cp $PROD_ENV_FILE .env.prod'
+                    sh 'docker-compose -f docker-compose.yml pull'
+                    sh 'docker-compose -f docker-compose.yml up -d'
+                }
             }
         }
     }

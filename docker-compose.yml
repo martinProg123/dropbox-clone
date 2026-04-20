@@ -36,7 +36,7 @@ services:
       timeout: 5s
       retries: 5
   backend:
-    image: ${DOCKER_HUB_USERNAME}/dropbox-backend:latest
+    image: ${DOCKER_HUB_CREDS_USR}/dropbox-backend:latest
     env_file:
       - .env.prod
     environment:
@@ -57,7 +57,7 @@ services:
       minio:
         condition: service_healthy
   frontend:
-    image: ${DOCKER_HUB_USERNAME}/dropbox-frontend:latest
+    image: ${DOCKER_HUB_CREDS_USR}/dropbox-frontend:latest
     env_file:
       - .env.prod
     environment:
