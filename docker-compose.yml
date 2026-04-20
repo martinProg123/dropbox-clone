@@ -36,9 +36,7 @@ services:
       timeout: 5s
       retries: 5
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ${DOCKER_HUB_USERNAME}/dropbox-backend:latest
     env_file:
       - .env.prod
     environment:
@@ -59,15 +57,13 @@ services:
       minio:
         condition: service_healthy
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: ${DOCKER_HUB_USERNAME}/dropbox-frontend:latest
     env_file:
       - .env.prod
     environment:
-      VITE_API_URL: http://backend:8080
+      VITE_API_URL: http://localhost:8080
     ports:
-      - "80:80"
+      - "49200:80"
     depends_on:
       backend:
         condition: service_started
