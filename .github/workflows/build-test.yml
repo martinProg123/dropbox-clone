@@ -1,4 +1,4 @@
-name: Build and Test
+name: CI/CD Pipeline
 
 on:
   push:
@@ -38,7 +38,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -48,3 +48,31 @@ jobs:
           cd frontend
           npm install
           npm run build
+  
+  push-to-docker:
+    name: Push to docker hub
+    needs: [frontend-ci, backend-ci]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_CREDS_USR }}
+          password: ${{ secrets.DOCKER_HUB_CREDS_PSW }} 
+
+      - name: Build and Push Backend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_CREDS_USR }}/dropbox-backend:latest
+
+      - name: Build and Push Frontend Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_CREDS_USR }}/dropbox-frontend:latest

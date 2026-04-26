@@ -1,3 +1,4 @@
+![Build Status](https://github.com/martinProg123/dropbox-clone/actions/workflows/build-test.yml/badge.svg)
 # React + java spring boot + minio(object storage) + rabbitMQ + postgresql
 
 ## Quick start
