@@ -1,16 +1,19 @@
 ![Build Status](https://github.com/martinProg123/dropbox-clone/actions/workflows/build-test.yml/badge.svg)
 # React + java spring boot + minio(object storage) + rabbitMQ + postgresql
+Also check [docker hub](https://hub.docker.com/repositories/martin2455voc) for CI/CD
 
 ## Quick start
 ```
 docker compose -f docker-compose.dev.yml --env-file .env.dev up -d postgres-dev rabbitmq minio
 cd frontend && npm run dev
 ./run-backend.sh
-or
+```
+Or
+```
 docker compose -f docker-compose.dev.yml --env-file .env.dev up -d
 cd frontend && npm run dev
-
 ```
+
 ## Features:
 - Usual auth flow(login, logout) via jwt cookie
 - upload file
