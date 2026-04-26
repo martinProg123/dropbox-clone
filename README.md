@@ -33,11 +33,12 @@ cd frontend && npm run dev
 
 ### Delete
 1. only delete db entry
-2. schedule job for clean up unreferenced object in minio(TODO)
+2. schedule job for clean up unreferenced object in minio
+3. or On demand clean up: curl -X POST http://localhost:8080/api/admin/cleanup
 
 ## Api endpoint
 see [controller](/backend/src/main/java/com/example/dropbox/controller/)
-On demand clean up curl: curl -X POST http://localhost:8080/api/admin/cleanup
+
 
 ## DB schema:
 ```
