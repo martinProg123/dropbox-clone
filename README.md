@@ -66,4 +66,6 @@ CREATE TABLE file_metadata (
 );
 
 ```
+## Todo:
+https://www.freecodecamp.org/news/how-to-use-postgresql-as-a-cache-queue-and-search-engine/#heading-benchmark-3-full-text-search-with-tsvector
 
